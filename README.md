@@ -1,8 +1,8 @@
 # kvpress Benchmark
 
-Companion code for the blog post **"Benchmarking KV Cache Compression Methods in kvpress"**.
+Companion code for the [blog](https://gahmed.com/blog/kvpress/)
 
-Benchmarks seven KV-cache compression methods from the [kvpress](https://github.com/NVIDIA/kvpress) library across accuracy, peak GPU memory, and prefill latency — using a needle-in-a-haystack evaluation at multiple compression ratios and context lengths.
+Benchmarks seven KV-cache compression methods from the [kvpress](https://github.com/NVIDIA/kvpress) library across accuracy, peak GPU memory, and prefill latency using a needle-in-a-haystack evaluation at multiple compression ratios and context lengths.
 
 A second script stacks KV-cache quantization (int4 / int2) on top of token pruning to explore additive memory savings and accuracy trade-offs.
 
