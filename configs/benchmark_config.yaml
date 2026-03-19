@@ -1,0 +1,66 @@
+# ──────────────────────────────────────────────
+# kvpress KV-cache compression benchmark config
+# Tuned for 48 GB RTX PRO 5000
+# ──────────────────────────────────────────────
+
+model:
+  name: "meta-llama/Llama-3.1-8B-Instruct"
+  dtype: "bfloat16"
+  attn_implementation: "sdpa"
+
+# Compression methods to benchmark (ordered by leaderboard ranking)
+presses:
+  - name: "ExpectedAttentionPress"
+    kwargs: {}
+
+  - name: "AdaKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+  - name: "SnapKVPress"
+    kwargs: {}
+
+  - name: "KnormPress"
+    kwargs: {}
+
+  - name: "CriticalKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+  - name: "ThinKPress"
+    kwargs: {}
+
+  - name: "StreamingLLMPress"
+    kwargs:
+      n_sink: 4
+
+# Compression ratios to sweep
+compression_ratios: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+# Optional: also stack 4-bit KV quantization on top of pruning
+quantize_kv: false          # set true to add QuantizedCache(nbits=4)
+quantize_nbits: 4
+
+# Evaluation datasets
+eval:
+  ruler:
+    enabled: true
+    seq_lengths: [4096, 8192, 16384, 32768]
+    tasks: "all"            # or list: [niah_single, niah_multikey, ...]
+
+  loogle:
+    enabled: true
+
+  custom_needle:
+    enabled: true
+    context_tokens: 16384   # long-context needle-in-a-haystack
+    needle: "The secret password is 'cranberry'."
+    query: "What is the secret password?"
+
+# Hardware / runtime
+runtime:
+  seed: 42
+  num_warmup: 2
+  num_runs: 5               # per (press, ratio) pair
+  log_memory: true
+  results_dir: "results"

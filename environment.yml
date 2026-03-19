@@ -1,0 +1,26 @@
+name: kvpress-bench
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - tqdm
+  - pyyaml
+  - pynvml
+  - pip
+  - pip:
+      - --pre
+      - --extra-index-url=https://download.pytorch.org/whl/nightly/cu128
+      - torch==2.12.0.dev20260311+cu128
+      # - flash-attn --no-build-isolation
+      - kvpress
+      - transformers>=4.44.0
+      - accelerate
+      - datasets
+      - huggingface_hub
+      - optimum
+      - optimum-quanto       # Required for QuantizedCache int4/int2
+      - quanto

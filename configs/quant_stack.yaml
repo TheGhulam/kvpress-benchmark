@@ -1,0 +1,60 @@
+# ──────────────────────────────────────────────────────────────
+# kvpress: KV cache quantization × pruning stacking benchmark
+# Tuned for 48 GB RTX PRO 5000 Blackwell
+# ──────────────────────────────────────────────────────────────
+
+model:
+  name: "meta-llama/Llama-3.1-8B-Instruct"
+  dtype: "bfloat16"
+  attn_implementation: "sdpa"
+
+# ── Pruning methods (top-5 from the base benchmark) ─────────
+# Excluded ThinKPress and StreamingLLMPress — they already fail
+# at high compression in the base benchmark.
+presses:
+  - name: "ExpectedAttentionPress"
+    kwargs: {}
+
+  - name: "SnapKVPress"
+    kwargs: {}
+
+  - name: "KnormPress"
+    kwargs: {}
+
+  - name: "AdaKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+  - name: "CriticalKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+compression_ratios: [0.3, 0.5, 0.7, 0.9]
+
+# ── KV cache quantization settings ──────────────────────────
+# Sweep bit-widths: 16 (baseline fp16/bf16), 4-bit, 2-bit
+# int4 is near-lossless per HuggingFace blog; int2 degrades.
+# The key question: does int4+pruning remain lossless?
+kv_quantization:
+  backend: "quanto"
+  nbits_list: [16, 4, 2]
+  q_group_size: 64
+  residual_length: 128
+
+# ── Evaluation ───────────────────────────────────────────────
+eval:
+  custom_needle:
+    enabled: true
+    # Sweep multiple context lengths to find the OOM boundary
+    context_tokens: 8192          # default (overridden by sweep)
+    context_tokens_sweep: [4096, 8192, 16384]
+    needle: "The secret password is 'cranberry'."
+    query: "What is the secret password?"
+
+# ── Runtime ──────────────────────────────────────────────────
+runtime:
+  seed: 42
+  num_warmup: 0
+  num_runs: 3
+  log_memory: true
+  results_dir: "results/quant_stack"

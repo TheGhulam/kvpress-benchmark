@@ -1,0 +1,66 @@
+# ──────────────────────────────────────────────
+# kvpress KV-cache compression benchmark config
+# Quick profile — all presses, fast sweep
+# Tuned for 48 GB RTX PRO 5000
+# ──────────────────────────────────────────────
+
+model:
+  name: "meta-llama/Llama-3.1-8B-Instruct"
+  dtype: "bfloat16"
+  attn_implementation: "sdpa"
+
+# Compression methods to benchmark (ordered by leaderboard ranking)
+presses:
+  - name: "ExpectedAttentionPress"
+    kwargs: {}
+
+  - name: "AdaKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+  - name: "SnapKVPress"
+    kwargs: {}
+
+  - name: "KnormPress"
+    kwargs: {}
+
+  - name: "CriticalKVPress"
+    kwargs:
+      inner_press: "ExpectedAttentionPress"
+
+  - name: "ThinKPress"
+    kwargs: {}
+
+  - name: "StreamingLLMPress"
+    kwargs:
+      n_sink: 4
+
+compression_ratios: [0.3, 0.5, 0.7, 0.9]
+
+# Optional: also stack 4-bit KV quantization on top of pruning
+quantize_kv: false
+quantize_nbits: 4
+
+# Evaluation datasets
+eval:
+  ruler:
+    enabled: true
+    seq_lengths: [4096, 8192, 16384, 32768]
+    tasks: "all"
+
+  loogle:
+    enabled: true
+
+  custom_needle:
+    enabled: true
+    context_tokens: 8192          # Published results used 4096 and 8192 separately
+    needle: "The secret password is 'cranberry'."
+    query: "What is the secret password?"
+
+# Hardware / runtime — fast single-shot
+runtime:
+  seed: 42
+  num_warmup: 0
+  num_runs: 3
+  log_memory: true
+  results_dir: "results"
